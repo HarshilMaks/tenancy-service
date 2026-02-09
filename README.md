@@ -1,6 +1,6 @@
 ## Tenancy Service
 
-A production-grade multi-tenant organization management service built with FastAPI and Clean Architecture principles. This service provides comprehensive tenant lifecycle management with enterprise-level observability, monitoring, and compliance features.
+A Multi-Tenant Organization Management Service built with FastAPI and Clean Architecture principles. This service provides comprehensive tenant lifecycle management with enterprise-level observability, monitoring, and compliance features.
 
 ## Overview
 
