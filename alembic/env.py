@@ -29,13 +29,8 @@ if env_path.exists():
     logger = logging.getLogger("alembic.env")
     logger.info(f"Loaded environment from {env_path}")
 
-# Import your models metadata
-# Adjust this import based on your actual models location
-# from infrastructure.persistence.models import Base
-# target_metadata = Base.metadata
-
-# For now, using None - replace with actual metadata when models are defined
-target_metadata = None
+from infrastructure.persistence.tenant_repository import Base
+target_metadata = Base.metadata
 
 # Alembic Config object
 config = context.config

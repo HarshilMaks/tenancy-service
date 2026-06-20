@@ -461,9 +461,9 @@ class Organization:
     # AUDITING
     # ========================================================================
     
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     created_by: Optional[str] = None  # User ID who created
-    updated_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_by: Optional[str] = None  # Last user who modified
     
     # Optimistic locking

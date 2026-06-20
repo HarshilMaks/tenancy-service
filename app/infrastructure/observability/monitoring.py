@@ -7,7 +7,7 @@ Includes alerting for critical issues with TTL caching.
 import logging
 import time
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, asdict
 from enum import Enum
@@ -38,7 +38,7 @@ class CachedValue:
     
     def is_expired(self) -> bool:
         """Check if cache entry has expired."""
-        return (datetime.utcnow() - self.timestamp).total_seconds() > self.ttl_seconds
+        return (datetime.now(timezone.utc) - self.timestamp).total_seconds() > self.ttl_seconds
 
 
 class CacheManager:
@@ -62,7 +62,7 @@ class CacheManager:
     
     def set(self, key: str, value: Any) -> None:
         """Set value in cache with TTL."""
-        self.cache[key] = CachedValue(value=value, timestamp=datetime.utcnow(), ttl_seconds=self.ttl_seconds)
+        self.cache[key] = CachedValue(value=value, timestamp=datetime.now(timezone.utc), ttl_seconds=self.ttl_seconds)
     
     def cleanup_expired(self) -> int:
         """Remove all expired entries."""
@@ -162,7 +162,7 @@ class MetricsCollector:
         metric = Metric(
             name=name,
             value=value,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             tags=tags or {}
         )
         
@@ -205,7 +205,7 @@ class MetricsCollector:
 
     def cleanup_old_metrics(self):
         """Remove metrics older than retention period and expired cache entries."""
-        cutoff = datetime.utcnow() - timedelta(hours=self.retention_hours)
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=self.retention_hours)
         
         for name in self.metrics:
             self.metrics[name] = [
@@ -245,7 +245,7 @@ class MetricsCollector:
             severity=severity,
             title=title,
             message=message,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             metric_name=metric_name,
             threshold=threshold,
             current_value=current_value
@@ -330,7 +330,7 @@ class HealthMonitor:
         health = {
             'healthy': all_healthy,
             'checks': checks,
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.now(timezone.utc).isoformat()
         }
         
         # Cache the health status for 30 seconds
@@ -382,7 +382,7 @@ class PerformanceMonitor:
             return cached_report
         
         report = {
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'metrics': {}
         }
         

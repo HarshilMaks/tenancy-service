@@ -37,6 +37,7 @@ from functools import lru_cache
 import hashlib
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Column,
     DateTime,
@@ -345,11 +346,10 @@ class OrganizationModel(Base):
         #     "trial_ends_at",
         #     postgresql_where=(Column("is_trial") == True)
         # ),
-        # Partial index for active organizations
+        # Index for active organizations
         Index(
             "ix_tenants_active",
             "status",
-            postgresql_where=(Column("terminated_at").is_(None))
         ),
         {
             "comment": "Multi-tenant organization registry",
@@ -361,7 +361,7 @@ class OrganizationModel(Base):
         return (
             f"<OrganizationModel("
             f"id={self.id}, "
-            f"org_id='{self.org_id}', "
+            f"external_id='{self.external_id}', "
             f"name='{self.name}', "
             f"status={self.status.name if self.status else 'None'}"
             f")>"
@@ -432,11 +432,29 @@ class OrganizationEventModel(Base):
         comment="When the event was recorded"
     )
     
+    metadata_json = Column(
+        "metadata",
+        JSONB,
+        nullable=True,
+        comment="User, correlation ID, etc."
+    )
+    
+    sequence_number = Column(
+        BigInteger,
+        nullable=False,
+        comment="Global ordering of events"
+    )
+    
     __table_args__ = (
         Index(
             "ix_organization_events_org_occurred",
             "organization_id",
             "occurred_at"
+        ),
+        Index(
+            "ix_tenant_events_sequence",
+            "sequence_number",
+            unique=True
         ),
         {
             "comment": "Organization domain events for audit and event sourcing",
@@ -914,50 +932,40 @@ class OrganizationRepository:
         
         return [self._to_domain(m) for m in models]
     
-    def list_expiring_trials(
+    def list_by_trial_status(
         self,
-        before: datetime,
         limit: int = 100,
     ) -> List[Organization]:
         """
-        List trial organizations expiring before given date.
+        List organizations currently in trial status.
         
         Args:
-            before: Expiration cutoff date
             limit: Maximum number of results
             
         Returns:
             List of trial organizations
         """
         models = self._session.query(OrganizationModel).filter(
-            OrganizationModel.is_trial == True,
-            OrganizationModel.trial_ends_at < before,
-            OrganizationModel.status == OrganizationStatus.ACTIVE,
+            OrganizationModel.status == OrganizationStatus.TRIAL,
         ).limit(limit).all()
         
         return [self._to_domain(m) for m in models]
     
-    def list_terminated_for_purge(
+    def list_terminated(
         self,
-        before: datetime,
         limit: int = 100,
     ) -> List[Organization]:
         """
-        List terminated organizations eligible for permanent deletion.
-        
-        Organizations terminated before the given date have exceeded
-        the retention period and can be permanently purged.
+        List terminated organizations.
         
         Args:
-            before: Termination date cutoff
             limit: Maximum number of results
             
         Returns:
-            List of organizations to purge
+            List of terminated organizations
         """
         models = self._session.query(OrganizationModel).filter(
             OrganizationModel.status == OrganizationStatus.TERMINATED,
-            OrganizationModel.terminated_at < before,
         ).limit(limit).all()
         
         return [self._to_domain(m) for m in models]

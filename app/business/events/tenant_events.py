@@ -29,7 +29,7 @@ import json
 class DomainEvent:
     """Base class for all domain events."""
     event_id: str = field(default_factory=lambda: str(uuid4()))
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     version: int = 1
     metadata: Dict[str, Any] = field(default_factory=dict)
     

@@ -54,6 +54,7 @@ env/
 logs/
 *.log
 log/
+server.log
 
 # Testing
 .pytest_cache/

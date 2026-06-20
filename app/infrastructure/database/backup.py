@@ -8,7 +8,7 @@ Implements backup strategy for disaster recovery. Supports:
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy import text
@@ -41,12 +41,12 @@ class BackupManager:
             Path to backup file
         """
         # Rate limiting
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         if self.last_backup_time and (now - self.last_backup_time).total_seconds() < self.min_backup_interval:
             raise ValueError("Backup rate limited - wait before creating another")
         
         if not backup_name:
-            backup_name = f"backup_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+            backup_name = f"backup_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
         
         # Path traversal protection
         backup_name = os.path.basename(backup_name)
@@ -159,7 +159,7 @@ class BackupManager:
         Returns:
             Number of backups deleted
         """
-        cutoff_date = datetime.utcnow() - timedelta(days=retention_days)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=retention_days)
         deleted_count = 0
         
         try:

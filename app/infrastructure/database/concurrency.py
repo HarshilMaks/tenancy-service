@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, and_
 from app.db.models.domain_models import Tenant
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class ConcurrencyControl:
         """
         # Add version increment to update
         update_data['version'] = current_version + 1
-        update_data['updated_at'] = datetime.utcnow()
+        update_data['updated_at'] = datetime.now(timezone.utc)
         
         stmt = (
             update(Tenant)
@@ -136,7 +136,7 @@ class ConcurrencyControl:
             raise ValueError(f"Tenant {tenant_id} not found")
         
         # Update
-        update_data['updated_at'] = datetime.utcnow()
+        update_data['updated_at'] = datetime.now(timezone.utc)
         stmt = (
             update(Tenant)
             .where(Tenant.id == tenant_id)
