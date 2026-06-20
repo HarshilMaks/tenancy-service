@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: tenancy_service_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install dependencies
+        run: uv pip install -r requirements.txt
+
+      - name: Run lint
+        run: uv run flake8 app/ tests/
+
+      - name: Run type check
+        run: uv run mypy app/ || true
+
+      - name: Run tests
+        run: uv run pytest tests/ -v --tb=short --cov=. --cov-report=term-missing
+        env:
+          ENVIRONMENT: testing
+          TESTING: "true"
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/tenancy_service_test
+          DATABASE_PASSWORD: postgres
+          SECRET_KEY: test_secret_key_minimum_32_characters_long_for_testing_only
+          JWT_SECRET: test_jwt_secret_minimum_32_characters_long_for_testing_only
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t tenancy-service .

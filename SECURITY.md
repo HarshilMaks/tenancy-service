@@ -30,7 +30,7 @@ cp .env.local.example .env.local
 2. Fill in your local secrets:
 ```bash
 # Generate secrets
-uv python -c "import secrets; print(secrets.token_urlsafe(32))"
+python -c "import secrets; print(secrets.token_urlsafe(32))"
 
 # Edit .env.local with your values
 SECRET_KEY=your_generated_secret_here
@@ -117,7 +117,7 @@ aws secretsmanager create-secret \
 ### 1. Secret Generation
 ```bash
 # Generate cryptographically secure secrets
-uv python -c "import secrets; print(secrets.token_urlsafe(32))"
+python -c "import secrets; print(secrets.token_urlsafe(32))"
 
 # Or use OpenSSL
 openssl rand -base64 32

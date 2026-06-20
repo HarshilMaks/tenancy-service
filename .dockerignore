@@ -1,0 +1,13 @@
+.venv
+.venv/
+.git
+.gitignore
+__pycache__
+*.pyc
+.env
+.env.*
+server.log
+tests/
+docs/
+*.md
+*.lock
